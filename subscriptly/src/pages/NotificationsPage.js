@@ -1,16 +1,17 @@
 import React, {useState, useEffect} from 'react'
+import "./Notifications.css";
 import {differenceInDays, addMonths, addWeeks} from 'date-fns'
-import Footer from '../components/Footer.js';
 import '../components/Footer.css';
 import './NotificationPage.css';
 
 const NotificationsPage = ({user}) => {
     const [notifications, setNotifications] = useState([])
 
+    //Fetch user data and individual's user subscriptions
     useEffect(() => {
         const fetchNotifications = () => {
             if (user) {
-                fetch(`http://localhost:5000/users?name=${user}`)
+                fetch(`https://subscriptly-server.onrender.com/users?name=${user}`)
                 .then(res => res.json())
                 .then(users => {
                     if(users.length > 0) {
@@ -27,7 +28,7 @@ const NotificationsPage = ({user}) => {
         }
         fetchNotifications()
     }, [user])
-
+    //Calculate days left for a subscription to expire (less than 7 days) and display them in the notifications page.
     function calculateDaysLeft(dateOfPayment, billingCycle) {
         const paymentDate = new Date(dateOfPayment)
         let nextBillingDate;
@@ -50,28 +51,25 @@ const NotificationsPage = ({user}) => {
     }
 
     return (
-        <div className="notifications-page">
-            <div className="notifications-content">
-                <h2 className='notifs'>Notifications</h2>
-                {notifications.length > 0 ? (
-                    <ul>
-                        {notifications.map((subscription) => {
-                            const daysLeft = calculateDaysLeft(subscription.date_of_payment, subscription.billing_cycle)
-                            return (
-                            <li key={subscription.id}>
-                                Your subscription to {subscription.name} is expiring soon.
-                                 ({daysLeft}) {daysLeft === 1 ? 'day' : 'days'} left!
-                            </li>
-                            )
-                        })}
-                    </ul>
-                ) : (
-                    <p>No subscriptions are expiring soon.</p>
-                )}
-            </div>
-            <Footer className="footer" />
-        </div>
-    )
-}
+        <div className="notifications-container">
+        <h2>Notifications</h2>
+        {notifications.length > 0 ? (
+            <ul>
+                {notifications.map((subscription) => {
+                    const daysLeft = calculateDaysLeft(subscription.date_of_payment, subscription.billing_cycle)
+                    return (
+                    <li key={subscription.id}>
+                        Your subscription to {subscription.name} {daysLeft > 0 ? 'is expiring soon' : 'is expired'}.
+                         ({daysLeft}) {daysLeft === 1 ? 'day' : 'days'} left!
+                    </li>
+                    )
+                })}
+            </ul>
+        ) : (
+            <p>No subscriptions are expiring soon.</p>
+        )}
+    </div>
+);
+};
 
 export default NotificationsPage;

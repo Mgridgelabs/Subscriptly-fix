@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import "./SubscriptionsForm.css"
 
+//Form to add new subscriptions and persist to server
 function SubscriptionsForm({user, onAddSubscription}) {
 const [formData, setFormData] = useState({
     name: '',
@@ -9,6 +10,7 @@ const [formData, setFormData] = useState({
     billing_cycle: 'monthly',
     date_of_payment: '',
 })
+//onChange event listener call back function.
 const handleChange = (e) => {
     const {name, value} = e.target
     setFormData({
@@ -16,10 +18,11 @@ const handleChange = (e) => {
         [name]: value,
     })
 }
+//After submiting, persist to server.
 const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch(`http://localhost:5000/users?name=${user}`)
+    fetch(`https://subscriptly-server.onrender.com/users?name=${user}`)
         .then(res => res.json())
         .then(users => {
             if (users.length > 0) {
@@ -31,7 +34,7 @@ const handleSubmit = (e) => {
                     subscriptions: updatedSubscriptions,
                 };
 
-                return fetch(`http://localhost:5000/users/${userData.id}`, {
+                return fetch(`https://subscriptly-server.onrender.com/users/${userData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -110,14 +113,6 @@ const handleSubmit = (e) => {
             onChange={handleChange} 
             required
         />
-        {/* <input
-            type="checkbox"
-            name="status"
-            placeholder="subscription status"
-            value={formData.active}
-            onChange={handleChange} 
-            required
-        /> */}
         <button type="submit">Add Subscription</button>
     </form>
   )

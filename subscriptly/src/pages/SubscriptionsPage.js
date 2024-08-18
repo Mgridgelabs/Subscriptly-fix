@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import Table from "../components/Table";
 import "./HomePage.css";
+import './SubscriptionPage.css';
 import SubscriptionsForm from "../components/SubscriptionsForm";
 import Footer from '../components/Footer';
 import SearchBar from '../components/SearchBar';
 import Filter from "../components/Filter";
 import PaymentDateFilter from "../components/PaymentDateFilter";
 
-const HomePage = ({ user }) => {
+//Page to display subscriptions.
+const SubscriptionsPage = ({ user }) => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
+  
+  //Fetch the current user's subscriptions
   useEffect(() => {
     const fetchSubscriptions = () => {
       if (user) {
-        fetch(`http://localhost:5000/users?name=${user}`)
+        fetch(`https://subscriptly-server.onrender.com/users?name=${user}`)
           .then(res => {
             if (!res.ok) {
               throw new Error('Network Response Was Not Ok');
@@ -35,9 +38,10 @@ const HomePage = ({ user }) => {
     fetchSubscriptions();
   }, [user]);
 
+  //Delete the current user's subscription by clicking cancel button and persist changes to server
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to cancel this subscription?")) {
-      fetch(`http://localhost:5000/users?name=${user}`)
+      fetch(`https://subscriptly-server.onrender.com/users?name=${user}`)
         .then(res => res.json())
         .then(users => {
           if (users.length > 0) {
@@ -48,7 +52,7 @@ const HomePage = ({ user }) => {
               ...userData,
               subscriptions: updatedSubscriptions
             };
-            fetch(`http://localhost:5000/users/${userData.id}`, {
+            fetch(`https://subscriptly-server.onrender.com/users/${userData.id}`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json'
@@ -68,6 +72,7 @@ const HomePage = ({ user }) => {
     }
   };
 
+  //Filter the subscriptions by name search, category and date range.
   const filteredSubscriptions = subscriptions.filter(subscription => {
     const matchSearch = subscription.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchCategory = selectedCategory === '' || subscription.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -76,6 +81,7 @@ const HomePage = ({ user }) => {
     return matchSearch && matchCategory && matchDateRange;
   });
 
+  //Function to add a new subscription and give a random id.Added subscription is persisted to server
   const handleAddSubscription = (newSubscription) => {
     const generateId = (subscriptions) => {
       let maxId = subscriptions.reduce((max, sub) => Math.max(max, parseInt(sub.id)), 0);
@@ -86,7 +92,7 @@ const HomePage = ({ user }) => {
     const newSubWithId = { ...newSubscription, id };
     const updatedSubscriptions = [...subscriptions, newSubWithId];
 
-    fetch(`http://localhost:5000/users?name=${user}`)
+    fetch(`https://subscriptly-server.onrender.com/users?name=${user}`)
       .then(res => res.json())
       .then(users => {
         if (users.length > 0) {
@@ -95,7 +101,7 @@ const HomePage = ({ user }) => {
             ...userData,
             subscriptions: updatedSubscriptions
           };
-          return fetch(`http://localhost:5000/users/${userData.id}`, {
+          return fetch(`https://subscriptly-server.onrender.com/users/${userData.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
@@ -113,10 +119,12 @@ const HomePage = ({ user }) => {
       .catch(error => console.error('Error updating subscriptions:', error));
   };
 
+  //Function to determine selected category for filtering
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
   };
 
+  //Function to handle edited subscription cell in the table
   const handleUpdateSubscription = (id, updatedSubscription) => {
     setSubscriptions((prevSubscriptions) =>
       prevSubscriptions.map((subscription) =>
@@ -125,6 +133,7 @@ const HomePage = ({ user }) => {
     );
   };
 
+  //Display this message if no user is logged in.
   if (!user) {
     return (
       <div className="sign-in-prompt" style={{ textAlign: 'center', marginTop: '20px', color: 'black !important' }}>
@@ -135,14 +144,24 @@ const HomePage = ({ user }) => {
 
   return (
     <div className="myHomePage">
-      <SubscriptionsForm user={user} onAddSubscription={handleAddSubscription} />
-      <SearchBar setSearchTerm={setSearchTerm} />
-      <Filter selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} />
-      <PaymentDateFilter startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />
-      <Table subscriptions={filteredSubscriptions} handleDelete={handleDelete} onUpdate={handleUpdateSubscription} />
+      <div className="topSection">
+        <div className="leftColumn">
+          <SubscriptionsForm user={user} onAddSubscription={handleAddSubscription} />
+        </div>
+        <div className="rightColumn">
+          <div className="rightColumnContainer">
+            <SearchBar setSearchTerm={setSearchTerm} className="search" />
+            <Filter selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} className="filter" />
+            <PaymentDateFilter startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} className="dates" />
+          </div>
+        </div>
+      </div>
+      <div className="tableContainer">
+        <Table subscriptions={filteredSubscriptions} handleDelete={handleDelete} onUpdate={handleUpdateSubscription} />
+      </div>
       <Footer />
     </div>
   );
 };
 
-export default HomePage;
+export default SubscriptionsPage;
